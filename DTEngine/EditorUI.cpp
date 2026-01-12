@@ -879,6 +879,65 @@ void EditorUI::DrawComponentProperties(Component* comp)
                 }
                 ImGui::EndTable();
             }
+
+            ImGui::SeparatorText("Stretch Presets");
+
+            auto applyStretch = [&](const Vector2& minAnchor, const Vector2& maxAnchor) {
+                auto setAnchorMin = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetAnchorMin(*static_cast<Vector2*>(value));
+                };
+                auto setAnchorMax = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetAnchorMax(*static_cast<Vector2*>(value));
+                };
+                auto setPivot = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetPivot(*static_cast<Vector2*>(value));
+                };
+                auto setAnchoredPos = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetAnchoredPosition(*static_cast<Vector2*>(value));
+                };
+                auto setSizeDelta = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetSizeDelta(*static_cast<Vector2*>(value));
+                };
+
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setAnchorMin, rect->GetAnchorMin(), minAnchor));
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setAnchorMax, rect->GetAnchorMax(), maxAnchor));
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setPivot, rect->GetPivot(), Vector2(0.5f, 0.5f)));
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setAnchoredPos, rect->GetAnchoredPosition(), Vector2(0.0f, 0.0f)));
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setSizeDelta, rect->GetSizeDelta(), Vector2(0.0f, 0.0f)));
+            };
+
+            if (ImGui::Button("Stretch All", ImVec2(-FLT_MIN, 0)))
+            {
+                applyStretch(Vector2(0.0f, 0.0f), Vector2(1.0f, 1.0f));
+            }
+
+            if (ImGui::BeginTable("RectStretchTable", 3))
+            {
+                ImGui::TableNextColumn();
+                if (ImGui::Button("Stretch X", ImVec2(-FLT_MIN, 0)))
+                {
+                    applyStretch(Vector2(0.0f, rect->GetAnchorMin().y), Vector2(1.0f, rect->GetAnchorMax().y));
+                }
+
+                ImGui::TableNextColumn();
+                if (ImGui::Button("Stretch Y", ImVec2(-FLT_MIN, 0)))
+                {
+                    applyStretch(Vector2(rect->GetAnchorMin().x, 0.0f), Vector2(rect->GetAnchorMax().x, 1.0f));
+                }
+
+                ImGui::TableNextColumn();
+                if (ImGui::Button("Stretch Center", ImVec2(-FLT_MIN, 0)))
+                {
+                    applyStretch(Vector2(0.5f, 0.5f), Vector2(0.5f, 0.5f));
+                }
+
+                ImGui::EndTable();
+            }
         }
 
         for (const PropertyInfo& prop : info->m_properties)

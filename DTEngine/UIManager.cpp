@@ -4,6 +4,7 @@
 #include "GameObject.h"
 #include "Transform.h"
 #include "RectTransform.h"
+#include "Canvas.h"
 
 void UIManager::OnResize(float width, float height)
 {
@@ -25,11 +26,43 @@ void UIManager::UpdateLayout(Scene* scene, float width, float height)
     }
 
     std::vector<RectTransform*> roots;
+    std::vector<RectTransform*> canvasRoots;
+
+    auto collectRectChildren = [&](Transform* parent, auto&& collectRef) -> void {
+        if (!parent) return;
+
+        for (Transform* child : parent->GetChildren())
+        {
+            if (!child) continue;
+            if (auto* rect = child->_GetOwner()->GetComponent<RectTransform>())
+            {
+                canvasRoots.push_back(rect);
+            }
+            else
+            {
+                collectRef(child, collectRef);
+            }
+        }
+    };
 
     const auto& gameObjects = scene->GetGameObjects();
     for (const auto& go : gameObjects)
     {
         if (!go || !go->IsActiveInHierarchy()) continue;
+
+        if (go->GetComponent<Canvas>())
+        {
+            if (auto* rect = go->GetComponent<RectTransform>())
+            {
+                canvasRoots.push_back(rect);
+            }
+            else if (auto* tf = go->GetTransform())
+            {
+                collectRectChildren(tf, collectRectChildren);
+            }
+            continue;
+        }
+
         RectTransform* rect = go->GetComponent<RectTransform>();
         if (!rect) continue;
 
@@ -40,6 +73,15 @@ void UIManager::UpdateLayout(Scene* scene, float width, float height)
         {
             roots.push_back(rect);
         }
+    }
+
+    if (!canvasRoots.empty())
+    {
+        for (RectTransform* root : canvasRoots)
+        {
+            root->ApplyLayoutRecursive(width, height);
+        }
+        return;
     }
 
     for (RectTransform* root : roots)
