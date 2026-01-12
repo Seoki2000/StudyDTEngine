@@ -3,6 +3,7 @@
 #include "DX11Renderer.h"
 #include "GameObject.h"
 #include "Transform.h" 
+#include "RectTransform.h"
 
 BEGINPROPERTY(Text)
 
@@ -29,5 +30,22 @@ void Text::SetText(const std::wstring& text)
 void Text::Render()
 {
     if (m_text.empty()) return;
-    DX11Renderer::Instance().DrawString(m_text, m_localOffset, m_fontSize, m_color);
+
+    Vector2 position = m_localOffset;
+
+    if (RectTransform* rect = GetComponent<RectTransform>())
+    {
+        float width = DX11Renderer::Instance().GetUIRenderWidth();
+        float height = DX11Renderer::Instance().GetUIRenderHeight();
+
+        if (width <= 0.0f || height <= 0.0f)
+        {
+            width = static_cast<float>(DX11Renderer::Instance().GetWidth());
+            height = static_cast<float>(DX11Renderer::Instance().GetHeight());
+        }
+
+        position = rect->GetScreenPosition(width, height) + m_localOffset;
+    }
+
+    DX11Renderer::Instance().DrawString(m_text, position, m_fontSize, m_color);
 }

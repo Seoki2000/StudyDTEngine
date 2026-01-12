@@ -23,7 +23,6 @@
 #include "Simplemathhelper.h"
 #include "Transform.h"
 #include "Light.h"
-#include "SceneManager.h"
 #include "Scene.h"
 #include "Camera.h"
 
@@ -124,7 +123,7 @@ void DX11Renderer::UpdateFrameCBuffer(const Matrix& viewTM, const Matrix& projec
     m_context->PSSetConstantBuffers(0, 1, m_cbuffer_frame.GetAddressOf());
 }
 
-void DX11Renderer::BeginUIRender()
+void DX11Renderer::BeginUIRender(Camera* camera, float width, float height)
 {
     //if (m_spriteBatch)
     //{
@@ -138,22 +137,27 @@ void DX11Renderer::BeginUIRender()
     //        DirectX::XMMatrixIdentity() 
     //    );
     //}
-    Camera* mainCamera = SceneManager::Instance().GetActiveScene()->GetMainCamera();
+    if (camera == nullptr) return;
 
+    m_uiCamera = camera;
+    m_uiWidth = width;
+    m_uiHeight = height;
 
-    if (mainCamera == nullptr) return;
+    m_uiOrthoBackup = camera->IsOrthographic();
+    m_uiOrthoSizeBackup = camera->GetOrthographicSize();
 
-    m_isOrthoBackup = mainCamera->IsOrthographic();
+    camera->SetIsOrthographic(true);
 
-    Camera* mainCam = SceneManager::Instance().GetActiveScene()->GetMainCamera();
+    if (height > 0.0f)
+    {
+        camera->SetOrthographicSize(height / 10.0f);
+    }
 
-    mainCam->SetIsOrthographic(true);
-
-    mainCam->SetProjectionOrthographic();
+    camera->SetProjectionOrthographic();
 
     UpdateFrameCBuffer(
         SimpleMathHelper::IdentityMatrix(),
-        SceneManager::Instance().GetActiveScene()->GetMainCamera()->GetProjectionMatrix()
+        camera->GetProjectionMatrix()
 	);
 
     m_context->OMSetDepthStencilState(m_states->DepthNone(), 0);
@@ -167,13 +171,22 @@ void DX11Renderer::EndUIRender()
     //    m_spriteBatch->End();
     //}
 
-    Camera* mainCam = SceneManager::Instance().GetActiveScene()->GetMainCamera(); 
-    if (mainCam == nullptr) return;
+    Camera* uiCamera = m_uiCamera;
+    if (uiCamera == nullptr) return;
 
-    mainCam->SetIsOrthographic(m_isOrthoBackup);
+    uiCamera->SetIsOrthographic(m_uiOrthoBackup);
+    uiCamera->SetOrthographicSize(m_uiOrthoSizeBackup);
 
-	mainCam->SetProjectionPerspective();
-    
+    if (m_uiOrthoBackup)
+    {
+        uiCamera->SetProjectionOrthographic();
+    }
+    else
+    {
+	    uiCamera->SetProjectionPerspective();
+    }
+
+    m_uiCamera = nullptr;
     
 
     ResetRenderState();

@@ -147,6 +147,7 @@
     <ClInclude Include="AddComponentCommand.h" />
     <ClInclude Include="AssetDatabase.h" />
     <ClInclude Include="Behaviour.h" />
+    <ClInclude Include="Canvas.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="ChangeComponentActiveCommand.h" />
     <ClInclude Include="ChangeEditorTransformCommand.h" />
@@ -188,6 +189,7 @@
     <ClInclude Include="ReflectionDatabase.h" />
     <ClInclude Include="ReflectionMacros.h" />
     <ClInclude Include="ReflectionProbe.h" />
+    <ClInclude Include="RectTransform.h" />
     <ClInclude Include="RegisterCoreTypes.h" />
     <ClInclude Include="RemoveComponentCommand.h" />
     <ClInclude Include="RenderTexture.h" />
@@ -205,6 +207,9 @@
     <ClInclude Include="Text3D.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="UILayer.h" />
+    <ClInclude Include="UIManager.h" />
+    <ClInclude Include="UILayoutGroup.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="WindowBase.h" />
   </ItemGroup>
@@ -212,6 +217,7 @@
     <ClCompile Include="AddComponentCommand.cpp" />
     <ClCompile Include="AssetDatabase.cpp" />
     <ClCompile Include="Behaviour.cpp" />
+    <ClCompile Include="Canvas.cpp" />
     <ClCompile Include="Camera.cpp" />
     <ClCompile Include="ChangeComponentActiveCommand.cpp" />
     <ClCompile Include="ChangeEditorTransformCommand.cpp" />
@@ -252,6 +258,7 @@
     </ClCompile>
     <ClCompile Include="ReflectionDatabase.cpp" />
     <ClCompile Include="ReflectionProbe.cpp" />
+    <ClCompile Include="RectTransform.cpp" />
     <ClCompile Include="RegisterCoreTypes.cpp" />
     <ClCompile Include="RemoveComponentCommand.cpp" />
     <ClCompile Include="RenderTexture.cpp" />
@@ -265,6 +272,9 @@
     <ClCompile Include="Text3D.cpp" />
     <ClCompile Include="Texture.cpp" />
     <ClCompile Include="Transform.cpp" />
+    <ClCompile Include="UILayer.cpp" />
+    <ClCompile Include="UIManager.cpp" />
+    <ClCompile Include="UILayoutGroup.cpp" />
     <ClCompile Include="Vertex.cpp" />
     <ClCompile Include="WindowBase.cpp" />
   </ItemGroup>

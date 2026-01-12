@@ -18,6 +18,10 @@
 #include "Image.h"
 #include "Mesh.h"
 #include "ShadowMap.h"
+#include "UIManager.h"
+#include "RectTransform.h"
+#include "UILayoutGroup.h"
+#include "UILayer.h"
 
 
 
@@ -431,6 +435,8 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
     const Matrix& projTM = camera->GetProjectionMatrix();
     DX11Renderer::Instance().UpdateFrameCBuffer(viewTM, projTM);
 
+    UIManager::Instance().UpdateLayout(this, width, height);
+
     std::vector<GameObject*> opaqueQueue;
     std::vector<GameObject*> transparentQueue;
     std::vector<GameObject*> uiQueue;
@@ -489,15 +495,67 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
     }
 
     if (renderUI) {
-        DX11Renderer::Instance().BeginUIRender(); // 카메라 행렬 Identity , 직교투영 DTXK 초기화 
+        DX11Renderer::Instance().BeginUIRender(camera, width, height); // 카메라 행렬 Identity , 직교투영 DTXK 초기화 
 
         std::sort(uiQueue.begin(), uiQueue.end(), [](GameObject* a, GameObject* b) {
-            return a->GetComponent<Image>()->GetOrderInLayer() < b->GetComponent<Image>()->GetOrderInLayer();
+            int aLayer = 0;
+            int bLayer = 0;
+
+            if (auto* layer = a->GetComponent<UILayer>())
+            {
+                aLayer = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+            }
+            if (auto* layer = b->GetComponent<UILayer>())
+            {
+                bLayer = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+            }
+
+            if (aLayer == bLayer)
+            {
+                return a->GetComponent<Image>()->GetOrderInLayer() < b->GetComponent<Image>()->GetOrderInLayer();
+            }
+
+            return aLayer < bLayer;
             });
+
+        constexpr float kUIZStep = 0.001f;
 
         for (auto* go : uiQueue)
         {
+            if (!go) continue;
+
+            Transform* tf = go->GetTransform();
+            Image* image = go->GetComponent<Image>();
+
+            float originalZ = 0.0f;
+            bool hasTransform = false;
+
+            if (tf && image)
+            {
+                int layerOrder = 0;
+                if (auto* layer = go->GetComponent<UILayer>())
+                {
+                    layerOrder = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+                }
+
+                int orderInLayer = image->GetOrderInLayer();
+                int combinedOrder = (layerOrder * 1000) + orderInLayer;
+
+                Vector3 position = tf->GetPosition();
+                originalZ = position.z;
+                position.z = originalZ + (static_cast<float>(combinedOrder) * kUIZStep);
+                tf->SetPosition(position);
+                hasTransform = true;
+            }
+
             DrawObject(go);
+
+            if (hasTransform)
+            {
+                Vector3 position = tf->GetPosition();
+                position.z = originalZ;
+                tf->SetPosition(position);
+            }
         }
 
         DX11Renderer::Instance().EndUIRender();

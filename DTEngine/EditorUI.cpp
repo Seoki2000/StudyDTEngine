@@ -6,6 +6,7 @@
 #include <cctype>
 #include <algorithm>
 #include <fstream>
+#include <cfloat>
 
 #include "EditorUI.h"
 #include "Scene.h"
@@ -40,6 +41,8 @@
 #include "Shader.h"
 #include "AssetDatabase.h"
 #include "Camera.h"
+#include "RectTransform.h"
+#include "Canvas.h"
 //#include "PasteGameObjectCommand.h"
 #include "SerializationUtils.h"
 
@@ -830,6 +833,54 @@ void EditorUI::DrawComponentProperties(Component* comp)
 
     if (header_open)
     {
+        if (auto* rect = dynamic_cast<RectTransform*>(comp))
+        {
+            ImGui::SeparatorText("Anchor Presets");
+
+            const struct Preset { const char* label; Vector2 anchor; } presets[] = {
+                {"TL", Vector2(0.0f, 1.0f)}, {"TC", Vector2(0.5f, 1.0f)}, {"TR", Vector2(1.0f, 1.0f)},
+                {"ML", Vector2(0.0f, 0.5f)}, {"MC", Vector2(0.5f, 0.5f)}, {"MR", Vector2(1.0f, 0.5f)},
+                {"BL", Vector2(0.0f, 0.0f)}, {"BC", Vector2(0.5f, 0.0f)}, {"BR", Vector2(1.0f, 0.0f)}
+            };
+
+            auto applyPreset = [&](const Vector2& anchor) {
+                auto setAnchorMin = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetAnchorMin(*static_cast<Vector2*>(value));
+                };
+                auto setAnchorMax = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetAnchorMax(*static_cast<Vector2*>(value));
+                };
+                auto setPivot = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetPivot(*static_cast<Vector2*>(value));
+                };
+                auto setAnchoredPos = [](void* target, void* value) {
+                    static_cast<RectTransform*>(target)->SetAnchoredPosition(*static_cast<Vector2*>(value));
+                };
+
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setAnchorMin, rect->GetAnchorMin(), anchor));
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setAnchorMax, rect->GetAnchorMax(), anchor));
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setPivot, rect->GetPivot(), anchor));
+                HistoryManager::Instance().Do(std::make_unique<ChangePropertyCommand<Vector2>>(
+                    rect, setAnchoredPos, rect->GetAnchoredPosition(), Vector2(0.0f, 0.0f)));
+            };
+
+            if (ImGui::BeginTable("RectPresetTable", 3))
+            {
+                for (int i = 0; i < 9; ++i)
+                {
+                    ImGui::TableNextColumn();
+                    if (ImGui::Button(presets[i].label, ImVec2(-FLT_MIN, 0)))
+                    {
+                        applyPreset(presets[i].anchor);
+                    }
+                }
+                ImGui::EndTable();
+            }
+        }
+
         for (const PropertyInfo& prop : info->m_properties)
         {
             if (prop.m_name == "m_editorEulerAngles")

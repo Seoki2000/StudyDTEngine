@@ -34,6 +34,7 @@
 #include "Text.h"
 #include "Image.h"
 #include "ReflectionProbe.h"
+#include "UIManager.h"
 
 
 Game::Game() = default;
@@ -575,8 +576,9 @@ void Game::OnResize(int width, int height)
 {
 	if (width <= 0 || height <= 0) return;
 	DX11Renderer::Instance().Resize(width, height);
-	
+
 	SceneManager::Instance().GetActiveScene()->GetMainCamera()->SetViewDirty();
+	UIManager::Instance().OnResize(static_cast<float>(width), static_cast<float>(height));
 }
 
 void Game::OnClose()
