@@ -2,6 +2,7 @@
 
 #include "MonoBehaviour.h"
 #include "SimpleMathHelper.h"
+#include <functional>
 
 class UISlider : public MonoBehaviour
 {
@@ -17,7 +18,7 @@ public:
     void SetMaxValue(float value) { m_maxValue = value; }
     float GetMaxValue() const { return m_maxValue; }
 
-    void SetValue(float value) { m_value = value; }
+    void SetValue(float value);
     float GetValue() const { return m_value; }
 
     void SetWholeNumbers(bool value) { m_wholeNumbers = value; }
@@ -29,6 +30,9 @@ public:
     void SetFillColor(const Vector4& value) { m_fillColor = value; }
     const Vector4& GetFillColor() const { return m_fillColor; }
 
+    void SetOnValueChanged(std::function<void(float)> callback) { m_onValueChanged = std::move(callback); }
+    void InvokeValueChanged();
+
 private:
     float m_minValue = 0.0f;
     float m_maxValue = 1.0f;
@@ -36,4 +40,5 @@ private:
     bool m_wholeNumbers = false;
     bool m_interactable = true;
     Vector4 m_fillColor = Vector4(1.f, 1.f, 1.f, 1.f);
+    std::function<void(float)> m_onValueChanged;
 };

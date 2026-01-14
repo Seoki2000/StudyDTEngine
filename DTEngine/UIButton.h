@@ -2,6 +2,7 @@
 
 #include "MonoBehaviour.h"
 #include "SimpleMathHelper.h"
+#include <functional>
 
 class UIButton : public MonoBehaviour
 {
@@ -23,9 +24,13 @@ public:
     void SetPressedColor(const Vector4& value) { m_pressedColor = value; }
     const Vector4& GetPressedColor() const { return m_pressedColor; }
 
+    void SetOnClick(std::function<void()> callback) { m_onClick = std::move(callback); }
+    void InvokeClick();
+
 private:
     bool m_interactable = true;
     Vector4 m_normalColor = Vector4(1.f, 1.f, 1.f, 1.f);
     Vector4 m_hoverColor = Vector4(0.8f, 0.8f, 0.8f, 1.f);
     Vector4 m_pressedColor = Vector4(0.6f, 0.6f, 0.6f, 1.f);
+    std::function<void()> m_onClick;
 };
