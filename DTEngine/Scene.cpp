@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <algorithm>
 
 
 #include "Scene.h"
@@ -16,6 +17,7 @@
 #include "MeshRenderer.h"
 #include "Camera.h"
 #include "Image.h"
+#include "Text.h"
 #include "Mesh.h"
 #include "ShadowMap.h"
 #include "UIManager.h"
@@ -440,6 +442,7 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
     std::vector<GameObject*> opaqueQueue;
     std::vector<GameObject*> transparentQueue;
     std::vector<GameObject*> uiQueue;
+    std::vector<std::pair<Text*, GameObject*>> uiTextQueue;
 
     for (const auto& go : GetGameObjects())
     {
@@ -451,6 +454,11 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
         Material* mat = mr->GetSharedMaterial();
         if (!mat) mat = ResourceManager::Instance().Load<Material>("Materials/Error");
         if (!mat) continue;
+
+        if (auto* text = go->GetComponent<Text>())
+        {
+            uiTextQueue.emplace_back(text, go.get());
+        }
 
         if (img) {
             uiQueue.push_back(go.get());
@@ -519,6 +527,7 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
             });
 
         constexpr float kUIZStep = 0.001f;
+        constexpr float kUIZMaxOffset = 1.0f;
 
         for (auto* go : uiQueue)
         {
@@ -543,7 +552,10 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
 
                 Vector3 position = tf->GetPosition();
                 originalZ = position.z;
-                position.z = originalZ + (static_cast<float>(combinedOrder) * kUIZStep);
+                float offset = std::clamp(static_cast<float>(combinedOrder) * kUIZStep,
+                    -kUIZMaxOffset,
+                    kUIZMaxOffset);
+                position.z = originalZ + offset;
                 tf->SetPosition(position);
                 hasTransform = true;
             }
@@ -555,6 +567,48 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
                 Vector3 position = tf->GetPosition();
                 position.z = originalZ;
                 tf->SetPosition(position);
+            }
+        }
+
+        if (!uiTextQueue.empty())
+        {
+            std::sort(uiTextQueue.begin(), uiTextQueue.end(), [](const auto& a, const auto& b) {
+                GameObject* aGo = a.second;
+                GameObject* bGo = b.second;
+                int aLayer = 0;
+                int bLayer = 0;
+
+                if (auto* layer = aGo->GetComponent<UILayer>())
+                {
+                    aLayer = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+                }
+                if (auto* layer = bGo->GetComponent<UILayer>())
+                {
+                    bLayer = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+                }
+
+                if (aLayer == bLayer)
+                {
+                    int aOrder = 0;
+                    int bOrder = 0;
+                    if (auto* image = aGo->GetComponent<Image>())
+                    {
+                        aOrder = image->GetOrderInLayer();
+                    }
+                    if (auto* image = bGo->GetComponent<Image>())
+                    {
+                        bOrder = image->GetOrderInLayer();
+                    }
+                    return aOrder < bOrder;
+                }
+
+                return aLayer < bLayer;
+                });
+
+            for (auto& entry : uiTextQueue)
+            {
+                if (!entry.first) continue;
+                entry.first->Render();
             }
         }
 
