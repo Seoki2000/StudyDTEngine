@@ -14,12 +14,17 @@ DTPROPERTY_ACCESSOR(UISlider, m_value, GetValue, SetValue)
 DTPROPERTY_ACCESSOR(UISlider, m_wholeNumbers, GetWholeNumbers, SetWholeNumbers)
 DTPROPERTY_ACCESSOR(UISlider, m_interactable, GetInteractable, SetInteractable)
 DTPROPERTY_ACCESSOR(UISlider, m_fillColor, GetFillColor, SetFillColor)
+DTPROPERTY_ACCESSOR(UISlider, m_trackColor, GetTrackColor, SetTrackColor)
+DTPROPERTY_ACCESSOR(UISlider, m_handleColor, GetHandleColor, SetHandleColor)
 ENDPROPERTY()
 
 void UISlider::Awake()
 {
     m_rectTransform = GetComponent<RectTransform>();
+    m_trackImage = GetComponent<Image>();
     CacheHandle();
+    ApplyTrackColor();
+    ApplyHandleColor();
     UpdateHandleVisual();
 }
 
@@ -63,7 +68,7 @@ void UISlider::CacheHandle()
 
     if (m_handleImage)
     {
-        m_handleImage->SetColor(Vector4(1.f, 1.f, 1.f, 1.f));
+        ApplyHandleColor();
     }
 }
 
@@ -82,4 +87,20 @@ void UISlider::UpdateHandleVisual()
     float x = -available * 0.5f + available * t;
 
     m_handleRect->SetAnchoredPosition(Vector2(x, 0.0f));
+}
+
+void UISlider::ApplyTrackColor()
+{
+    if (m_trackImage)
+    {
+        m_trackImage->SetColor(m_trackColor);
+    }
+}
+
+void UISlider::ApplyHandleColor()
+{
+    if (m_handleImage)
+    {
+        m_handleImage->SetColor(m_handleColor);
+    }
 }

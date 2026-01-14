@@ -32,16 +32,25 @@ public:
     void SetFillColor(const Vector4& value) { m_fillColor = value; }
     const Vector4& GetFillColor() const { return m_fillColor; }
 
+    void SetTrackColor(const Vector4& value) { m_trackColor = value; }
+    const Vector4& GetTrackColor() const { return m_trackColor; }
+
+    void SetHandleColor(const Vector4& value) { m_handleColor = value; }
+    const Vector4& GetHandleColor() const { return m_handleColor; }
+
     void SetOnValueChanged(std::function<void(float)> callback) { m_onValueChanged = std::move(callback); }
     void InvokeValueChanged();
 
 private:
     void CacheHandle();
     void UpdateHandleVisual();
+    void ApplyTrackColor();
+    void ApplyHandleColor();
 
     class RectTransform* m_rectTransform = nullptr;
     class RectTransform* m_handleRect = nullptr;
     class Image* m_handleImage = nullptr;
+    class Image* m_trackImage = nullptr;
 
     float m_minValue = 0.0f;
     float m_maxValue = 1.0f;
@@ -49,5 +58,7 @@ private:
     bool m_wholeNumbers = false;
     bool m_interactable = true;
     Vector4 m_fillColor = Vector4(1.f, 1.f, 1.f, 1.f);
+    Vector4 m_trackColor = Vector4(0.4f, 0.4f, 0.4f, 1.f);
+    Vector4 m_handleColor = Vector4(1.f, 1.f, 1.f, 1.f);
     std::function<void(float)> m_onValueChanged;
 };

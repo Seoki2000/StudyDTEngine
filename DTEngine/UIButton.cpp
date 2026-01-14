@@ -11,7 +11,7 @@ ENDPROPERTY()
 
 void UIButton::Awake()
 {
-    ApplyNormalColor();
+    ApplyNormalState();
 }
 
 void UIButton::InvokeClick()
@@ -20,10 +20,25 @@ void UIButton::InvokeClick()
     if (m_onClick) m_onClick();
 }
 
-void UIButton::ApplyNormalColor()
+void UIButton::ApplyNormalState()
+{
+    ApplyImageColor(m_normalColor);
+}
+
+void UIButton::ApplyHoverState()
+{
+    ApplyImageColor(m_hoverColor);
+}
+
+void UIButton::ApplyPressedState()
+{
+    ApplyImageColor(m_pressedColor);
+}
+
+void UIButton::ApplyImageColor(const Vector4& color)
 {
     if (auto* image = GetComponent<Image>())
     {
-        image->SetColor(m_normalColor);
+        image->SetColor(color);
     }
 }

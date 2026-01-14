@@ -26,11 +26,15 @@ public:
     void SetPressedColor(const Vector4& value) { m_pressedColor = value; }
     const Vector4& GetPressedColor() const { return m_pressedColor; }
 
+    void ApplyNormalState();
+    void ApplyHoverState();
+    void ApplyPressedState();
+
     void SetOnClick(std::function<void()> callback) { m_onClick = std::move(callback); }
     void InvokeClick();
 
 private:
-    void ApplyNormalColor();
+    void ApplyImageColor(const Vector4& color);
 
     bool m_interactable = true;
     Vector4 m_normalColor = Vector4(1.f, 1.f, 1.f, 1.f);
