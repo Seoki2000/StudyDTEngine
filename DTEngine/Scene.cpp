@@ -16,7 +16,6 @@
 #include "SerializationUtils.h"
 #include "MeshRenderer.h"
 #include "Camera.h"
-#include "Image.h"
 #include "Text.h"
 #include "Mesh.h"
 #include "ShadowMap.h"
@@ -24,6 +23,9 @@
 #include "RectTransform.h"
 #include "UILayoutGroup.h"
 #include "UILayer.h"
+#include "Image.h"
+#include "UIButton.h"
+#include "UISlider.h"
 
 
 
@@ -39,6 +41,46 @@ GameObject* Scene::CreateGameObject(const std::string& name)
     else
         m_gameObjects.emplace_back(std::move(go));
     return raw;
+}
+
+GameObject* Scene::CreateUIObject(const std::string& name)
+{
+    GameObject* go = CreateGameObject(name);
+    if (go && !go->GetComponent<RectTransform>())
+    {
+        go->AddComponent<RectTransform>();
+    }
+    return go;
+}
+
+GameObject* Scene::CreateUIImage(const std::string& name)
+{
+    GameObject* go = CreateUIObject(name);
+    if (go && !go->GetComponent<Image>())
+    {
+        go->AddComponent<Image>();
+    }
+    return go;
+}
+
+GameObject* Scene::CreateUIButton(const std::string& name)
+{
+    GameObject* go = CreateUIImage(name);
+    if (go && !go->GetComponent<UIButton>())
+    {
+        go->AddComponent<UIButton>();
+    }
+    return go;
+}
+
+GameObject* Scene::CreateUISlider(const std::string& name)
+{
+    GameObject* go = CreateUIImage(name);
+    if (go && !go->GetComponent<UISlider>())
+    {
+        go->AddComponent<UISlider>();
+    }
+    return go;
 }
 
 void Scene::AddGameObject(std::unique_ptr<GameObject> gameObject)

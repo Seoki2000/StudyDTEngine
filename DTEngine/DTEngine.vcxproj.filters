@@ -131,6 +131,12 @@
     <ClInclude Include="UILayoutGroup.h">
       <Filter>Component</Filter>
     </ClInclude>
+    <ClInclude Include="UIButton.h">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="UISlider.h">
+      <Filter>Component</Filter>
+    </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>PCH</Filter>
     </ClInclude>
@@ -332,6 +338,12 @@
       <Filter>Component</Filter>
     </ClCompile>
     <ClCompile Include="UILayoutGroup.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="UIButton.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="UISlider.cpp">
       <Filter>Component</Filter>
     </ClCompile>
     <ClCompile Include="AssetDatabase.cpp">
