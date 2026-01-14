@@ -80,6 +80,53 @@ GameObject* Scene::CreateUISlider(const std::string& name)
     {
         go->AddComponent<UISlider>();
     }
+
+    if (go)
+    {
+        Transform* tf = go->GetTransform();
+        bool hasHandle = false;
+        if (tf)
+        {
+            for (Transform* child : tf->GetChildren())
+            {
+                if (child && child->_GetOwner()->GetName() == "Handle")
+                {
+                    hasHandle = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasHandle)
+        {
+            GameObject* handle = CreateUIImage("Handle");
+            handle->GetTransform()->SetParent(tf);
+
+            if (auto* rect = handle->GetComponent<RectTransform>())
+            {
+                rect->SetAnchorMin(Vector2(0.5f, 0.5f));
+                rect->SetAnchorMax(Vector2(0.5f, 0.5f));
+                rect->SetAnchoredPosition(Vector2(0.0f, 0.0f));
+                rect->SetSizeDelta(Vector2(24.0f, 24.0f));
+            }
+
+            if (auto* image = handle->GetComponent<Image>())
+            {
+                image->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                if (auto* parentImage = go->GetComponent<Image>())
+                {
+                    image->SetOrderInLayer(parentImage->GetOrderInLayer() + 1);
+                }
+            }
+
+            if (auto* parentLayer = go->GetComponent<UILayer>())
+            {
+                auto* layer = handle->AddComponent<UILayer>();
+                layer->SetLayerName(parentLayer->GetLayerName());
+                layer->SetLayerOrder(parentLayer->GetLayerOrder());
+            }
+        }
+    }
     return go;
 }
 

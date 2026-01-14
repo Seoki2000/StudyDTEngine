@@ -12,6 +12,8 @@ public:
     UISlider() = default;
     ~UISlider() override = default;
 
+    void Awake() override;
+
     void SetMinValue(float value) { m_minValue = value; }
     float GetMinValue() const { return m_minValue; }
 
@@ -34,6 +36,13 @@ public:
     void InvokeValueChanged();
 
 private:
+    void CacheHandle();
+    void UpdateHandleVisual();
+
+    class RectTransform* m_rectTransform = nullptr;
+    class RectTransform* m_handleRect = nullptr;
+    class Image* m_handleImage = nullptr;
+
     float m_minValue = 0.0f;
     float m_maxValue = 1.0f;
     float m_value = 0.0f;

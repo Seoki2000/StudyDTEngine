@@ -12,6 +12,8 @@ public:
     UIButton() = default;
     ~UIButton() override = default;
 
+    void Awake() override;
+
     void SetInteractable(bool value) { m_interactable = value; }
     bool GetInteractable() const { return m_interactable; }
 
@@ -28,6 +30,8 @@ public:
     void InvokeClick();
 
 private:
+    void ApplyNormalColor();
+
     bool m_interactable = true;
     Vector4 m_normalColor = Vector4(1.f, 1.f, 1.f, 1.f);
     Vector4 m_hoverColor = Vector4(0.8f, 0.8f, 0.8f, 1.f);
