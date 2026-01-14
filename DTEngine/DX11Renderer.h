@@ -51,7 +51,7 @@ public:
 
     void UpdateFrameCBuffer(const Matrix& viewTM, const Matrix& projectionTM);
 
-    void BeginUIRender();
+    void BeginUIRender(class Camera* camera, float width, float height);
     void EndUIRender();
 
     void CreateShadowMap(int width, int height);
@@ -114,6 +114,8 @@ public:
 
     const Matrix& GetViewMatrix() const { return m_viewTM; }
     const Matrix& GetProjectionMatrix() const { return m_projTM; }
+    float GetUIRenderWidth() const { return m_uiWidth; }
+    float GetUIRenderHeight() const { return m_uiHeight; }
 
 private:
     bool CreateDeviceAndSwapchain();
@@ -184,7 +186,11 @@ private:
     Matrix m_viewTM;
     Matrix m_projTM;
 
-    bool m_isOrthoBackup;
+    Camera* m_uiCamera = nullptr;
+    float m_uiWidth = 0.0f;
+    float m_uiHeight = 0.0f;
+    bool m_uiOrthoBackup = false;
+    float m_uiOrthoSizeBackup = 0.0f;
 
     // UI 렌더링
     std::unique_ptr<DirectX::DX11::SpriteBatch>  m_spriteBatch;

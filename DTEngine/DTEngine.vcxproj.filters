@@ -119,10 +119,31 @@
     <ClInclude Include="Transform.h">
       <Filter>Component</Filter>
     </ClInclude>
+    <ClInclude Include="Canvas.h">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="RectTransform.h">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="UILayer.h">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="UILayoutGroup.h">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="UIButton.h">
+      <Filter>Component</Filter>
+    </ClInclude>
+    <ClInclude Include="UISlider.h">
+      <Filter>Component</Filter>
+    </ClInclude>
     <ClInclude Include="framework.h">
       <Filter>PCH</Filter>
     </ClInclude>
     <ClInclude Include="SimpleMathHelper.h">
+      <Filter>Util</Filter>
+    </ClInclude>
+    <ClInclude Include="UIManager.h">
       <Filter>Util</Filter>
     </ClInclude>
     <ClInclude Include="IResource.h">
@@ -307,6 +328,24 @@
     <ClCompile Include="Transform.cpp">
       <Filter>Component</Filter>
     </ClCompile>
+    <ClCompile Include="Canvas.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="RectTransform.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="UILayer.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="UILayoutGroup.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="UIButton.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
+    <ClCompile Include="UISlider.cpp">
+      <Filter>Component</Filter>
+    </ClCompile>
     <ClCompile Include="AssetDatabase.cpp">
       <Filter>Reflection\Serialization\Resources</Filter>
     </ClCompile>
@@ -423,6 +462,9 @@
     </ClCompile>
     <ClCompile Include="Texture.cpp">
       <Filter>Renderer</Filter>
+    </ClCompile>
+    <ClCompile Include="UIManager.cpp">
+      <Filter>Util</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
