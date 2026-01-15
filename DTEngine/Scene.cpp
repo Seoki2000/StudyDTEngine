@@ -3,6 +3,7 @@
 
 #include <filesystem>
 #include <iostream>
+#include <algorithm>
 
 
 #include "Scene.h"
@@ -15,9 +16,16 @@
 #include "SerializationUtils.h"
 #include "MeshRenderer.h"
 #include "Camera.h"
-#include "Image.h"
+#include "Text.h"
 #include "Mesh.h"
 #include "ShadowMap.h"
+#include "UIManager.h"
+#include "RectTransform.h"
+#include "UILayoutGroup.h"
+#include "UILayer.h"
+#include "Image.h"
+#include "UIButton.h"
+#include "UISlider.h"
 
 
 
@@ -33,6 +41,93 @@ GameObject* Scene::CreateGameObject(const std::string& name)
     else
         m_gameObjects.emplace_back(std::move(go));
     return raw;
+}
+
+GameObject* Scene::CreateUIObject(const std::string& name)
+{
+    GameObject* go = CreateGameObject(name);
+    if (go && !go->GetComponent<RectTransform>())
+    {
+        go->AddComponent<RectTransform>();
+    }
+    return go;
+}
+
+GameObject* Scene::CreateUIImage(const std::string& name)
+{
+    GameObject* go = CreateUIObject(name);
+    if (go && !go->GetComponent<Image>())
+    {
+        go->AddComponent<Image>();
+    }
+    return go;
+}
+
+GameObject* Scene::CreateUIButton(const std::string& name)
+{
+    GameObject* go = CreateUIImage(name);
+    if (go && !go->GetComponent<UIButton>())
+    {
+        go->AddComponent<UIButton>();
+    }
+    return go;
+}
+
+GameObject* Scene::CreateUISlider(const std::string& name)
+{
+    GameObject* go = CreateUIImage(name);
+    if (go && !go->GetComponent<UISlider>())
+    {
+        go->AddComponent<UISlider>();
+    }
+
+    if (go)
+    {
+        Transform* tf = go->GetTransform();
+        bool hasHandle = false;
+        if (tf)
+        {
+            for (Transform* child : tf->GetChildren())
+            {
+                if (child && child->_GetOwner()->GetName() == "Handle")
+                {
+                    hasHandle = true;
+                    break;
+                }
+            }
+        }
+
+        if (!hasHandle)
+        {
+            GameObject* handle = CreateUIImage("Handle");
+            handle->GetTransform()->SetParent(tf);
+
+            if (auto* rect = handle->GetComponent<RectTransform>())
+            {
+                rect->SetAnchorMin(Vector2(0.5f, 0.5f));
+                rect->SetAnchorMax(Vector2(0.5f, 0.5f));
+                rect->SetAnchoredPosition(Vector2(0.0f, 0.0f));
+                rect->SetSizeDelta(Vector2(24.0f, 24.0f));
+            }
+
+            if (auto* image = handle->GetComponent<Image>())
+            {
+                image->SetColor(Vector4(1.0f, 1.0f, 1.0f, 1.0f));
+                if (auto* parentImage = go->GetComponent<Image>())
+                {
+                    image->SetOrderInLayer(parentImage->GetOrderInLayer() + 1);
+                }
+            }
+
+            if (auto* parentLayer = go->GetComponent<UILayer>())
+            {
+                auto* layer = handle->AddComponent<UILayer>();
+                layer->SetLayerName(parentLayer->GetLayerName());
+                layer->SetLayerOrder(parentLayer->GetLayerOrder());
+            }
+        }
+    }
+    return go;
 }
 
 void Scene::AddGameObject(std::unique_ptr<GameObject> gameObject)
@@ -431,9 +526,12 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
     const Matrix& projTM = camera->GetProjectionMatrix();
     DX11Renderer::Instance().UpdateFrameCBuffer(viewTM, projTM);
 
+    UIManager::Instance().UpdateLayout(this, width, height);
+
     std::vector<GameObject*> opaqueQueue;
     std::vector<GameObject*> transparentQueue;
     std::vector<GameObject*> uiQueue;
+    std::vector<std::pair<Text*, GameObject*>> uiTextQueue;
 
     for (const auto& go : GetGameObjects())
     {
@@ -445,6 +543,11 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
         Material* mat = mr->GetSharedMaterial();
         if (!mat) mat = ResourceManager::Instance().Load<Material>("Materials/Error");
         if (!mat) continue;
+
+        if (auto* text = go->GetComponent<Text>())
+        {
+            uiTextQueue.emplace_back(text, go.get());
+        }
 
         if (img) {
             uiQueue.push_back(go.get());
@@ -489,15 +592,113 @@ void Scene::Render(Camera* camera, RenderTexture* renderTarget, bool renderUI)
     }
 
     if (renderUI) {
-        DX11Renderer::Instance().BeginUIRender(); // 카메라 행렬 Identity , 직교투영 DTXK 초기화 
+        DX11Renderer::Instance().BeginUIRender(camera, width, height); // 카메라 행렬 Identity , 직교투영 DTXK 초기화 
 
         std::sort(uiQueue.begin(), uiQueue.end(), [](GameObject* a, GameObject* b) {
-            return a->GetComponent<Image>()->GetOrderInLayer() < b->GetComponent<Image>()->GetOrderInLayer();
+            int aLayer = 0;
+            int bLayer = 0;
+
+            if (auto* layer = a->GetComponent<UILayer>())
+            {
+                aLayer = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+            }
+            if (auto* layer = b->GetComponent<UILayer>())
+            {
+                bLayer = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+            }
+
+            if (aLayer == bLayer)
+            {
+                return a->GetComponent<Image>()->GetOrderInLayer() < b->GetComponent<Image>()->GetOrderInLayer();
+            }
+
+            return aLayer < bLayer;
             });
+
+        constexpr float kUIZStep = 0.001f;
+        constexpr float kUIZMaxOffset = 1.0f;
 
         for (auto* go : uiQueue)
         {
+            if (!go) continue;
+
+            Transform* tf = go->GetTransform();
+            Image* image = go->GetComponent<Image>();
+
+            float originalZ = 0.0f;
+            bool hasTransform = false;
+
+            if (tf && image)
+            {
+                int layerOrder = 0;
+                if (auto* layer = go->GetComponent<UILayer>())
+                {
+                    layerOrder = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+                }
+
+                int orderInLayer = image->GetOrderInLayer();
+                int combinedOrder = (layerOrder * 1000) + orderInLayer;
+
+                Vector3 position = tf->GetPosition();
+                originalZ = position.z;
+                float offset = std::clamp(static_cast<float>(combinedOrder) * kUIZStep,
+                    -kUIZMaxOffset,
+                    kUIZMaxOffset);
+                position.z = originalZ + offset;
+                tf->SetPosition(position);
+                hasTransform = true;
+            }
+
             DrawObject(go);
+
+            if (hasTransform)
+            {
+                Vector3 position = tf->GetPosition();
+                position.z = originalZ;
+                tf->SetPosition(position);
+            }
+        }
+
+        if (!uiTextQueue.empty())
+        {
+            std::sort(uiTextQueue.begin(), uiTextQueue.end(), [](const auto& a, const auto& b) {
+                GameObject* aGo = a.second;
+                GameObject* bGo = b.second;
+                int aLayer = 0;
+                int bLayer = 0;
+
+                if (auto* layer = aGo->GetComponent<UILayer>())
+                {
+                    aLayer = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+                }
+                if (auto* layer = bGo->GetComponent<UILayer>())
+                {
+                    bLayer = UIManager::Instance().GetLayerOrder(layer->GetLayerName());
+                }
+
+                if (aLayer == bLayer)
+                {
+                    int aOrder = 0;
+                    int bOrder = 0;
+                    if (auto* image = aGo->GetComponent<Image>())
+                    {
+                        aOrder = image->GetOrderInLayer();
+                    }
+                    if (auto* image = bGo->GetComponent<Image>())
+                    {
+                        bOrder = image->GetOrderInLayer();
+                    }
+                    return aOrder < bOrder;
+                }
+
+                return aLayer < bLayer;
+                });
+
+            for (auto& entry : uiTextQueue)
+            {
+                if (!entry.first) continue;
+                entry.first->Render();
+            }
         }
 
         DX11Renderer::Instance().EndUIRender();

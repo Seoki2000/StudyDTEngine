@@ -24,6 +24,10 @@ Transform* Component::GetTransform() {
     return this->_GetOwner()->GetTransform();
 }
 
+const Transform* Component::GetTransform() const {
+    return this->_GetOwner()->GetTransform();
+}
+
 std::string Component::GetName() const {
     return this->_GetOwner()->GetName();
 }

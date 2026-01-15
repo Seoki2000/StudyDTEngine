@@ -25,6 +25,9 @@ public:
     void SetOrderInLayer(int order) { m_orderInLayer = order; }
     const int& GetOrderInLayer() const { return m_orderInLayer; }
 
+    void SetRaycastTarget(bool value) { m_raycastTarget = value; }
+    const bool& GetRaycastTarget() const { return m_raycastTarget; }
+
     void SetNativeSize();
 
 private:
@@ -33,4 +36,5 @@ private:
     uint64_t m_textureID = 0;
     Vector4 m_color = { 1.f, 1.f, 1.f, 1.f };
     int     m_orderInLayer = 0;
+    bool    m_raycastTarget = true;
 };
